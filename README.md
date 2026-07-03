@@ -1,98 +1,68 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# learn-backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> 프론트엔드 개발자가 **백엔드를 처음부터** 배워가는 학습 저장소.
+> "게시판" 하나를 단계마다 키우면서 NestJS → DB → 인증 → Docker → MSA까지 도달하는 걸 목표로 한다.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+React/Next로 API를 **호출하는 쪽**만 해오다가, 이제 **받아서 처리하는 쪽**(백엔드)을 배운다.
+매 단계 배운 내용은 [`study-blog/`](./study-blog) 폴더에 학습 노트로 기록한다.
 
-## Description
+## 기술 스택 (최종 목표)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| 영역 | 사용 기술 |
+|------|-----------|
+| 프레임워크 | NestJS + TypeScript |
+| DB | MySQL + **Knex**(쿼리빌더, ORM 아님) |
+| 인증/캐시 | Redis 세션 |
+| 아키텍처 | RabbitMQ 기반 MSA (API Gateway 패턴) |
+| 배포 | Docker + 네이버 클라우드(NCR) |
 
-## Project setup
+> 지금은 1단계라 위 스택을 전부 쓰진 않는다. 표준 백엔드부터 차근차근 쌓아 마지막에 도달하는 목표.
 
-```bash
-$ npm install
-```
+## 학습 로드맵
 
-## Compile and run the project
+0. **기반 다지기** — HTTP(서버 관점), REST, 요청→응답 생명주기, Node 런타임
+1. **표준 NestJS** — Module/Controller/Service, DI, 데코레이터, 요청 파이프라인, DTO 검증
+2. **DB & Knex** — SQL 기본, 쿼리빌더, 트랜잭션, 마이그레이션
+3. **인증 · 실전 API** — 세션 vs JWT, Guard, 파일 업로드, 전역 Exception Filter
+4. **Docker & 배포** — Dockerfile, 멀티스테이지 빌드, docker compose, 클라우드 배포
+5. **MSA & 메시지큐** — API Gateway, RabbitMQ, `@MessagePattern`, 서비스별 DB 분리, Redis 캐시
 
-```bash
-# development
-$ npm run start
+> **지금 어디까지 했는지 / 다음 할 일**은 [`CLAUDE.md`](./CLAUDE.md)의 "진행 상황" 섹션과
+> [`study-blog/`](./study-blog)의 최신 학습 노트에서 확인한다. (README는 진도를 따라 갱신하지 않는다)
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+## 실행 방법
 
 ```bash
-# unit tests
-$ npm run test
+# 의존성 설치
+npm install
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# 개발 모드 (파일 저장 시 자동 재시작)
+npm run start:dev
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+서버는 기본적으로 `http://localhost:3000` 에서 뜬다.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# 동작 확인 예시
+curl http://localhost:3000/posts
+curl http://localhost:3000/posts/1
+curl -X POST http://localhost:3000/posts \
+  -H "Content-Type: application/json" \
+  -d '{"title":"새 글","content":"내용"}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 폴더 구조
 
-## Resources
+```
+src/
+  main.ts            # 진입점 (서버 부팅)
+  app.module.ts      # 모듈 (조립 설명서)
+  app.controller.ts  # 컨트롤러 (라우팅 / 접수창구)
+  app.service.ts     # 서비스 (로직 / 데이터)
+study-blog/          # 단계별 학습 노트 (블로그용 글)
+CLAUDE.md            # 학습 로드맵 & 진행 상황 (AI 페어 학습용 지침)
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+*이 저장소는 학습 기록용입니다. 코드보다 [`study-blog/`](./study-blog)의 노트에 "왜 그렇게 했는지"가 정리되어 있습니다.*
