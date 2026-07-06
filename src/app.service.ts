@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-interface Post {
+export interface Post {
   id: number;
   title: string;
   content: string;
@@ -22,12 +22,29 @@ export class AppService {
   }
 
   getPost(id: number) {
-    return this.posts.find((post) => post.id === id);
+    const post = this.posts.find((post) => post.id === id);
+
+    if (!post) {
+      throw new NotFoundException('글을 찾을 수 없습니다.');
+    }
+
+    return post;
   }
 
   createPost(post: Omit<Post, 'id'>) {
     const newPost = { id: this.posts.length + 1, ...post };
     this.posts.push(newPost);
     return newPost;
+  }
+
+  updatePost(id: number, data: Partial<Omit<Post, 'id'>>) {
+    const post = this.getPost(id); // ← 찾기+404를 재사용
+    return Object.assign(post, data);
+  }
+
+  deletePost(id: number) {
+    this.getPost(id);
+    this.posts = this.posts.filter((post) => post.id !== id);
+    return { deleted: true };
   }
 }

@@ -71,9 +71,13 @@
   - 프로젝트 세팅(`nest new` 뼈대 확인), 서버 실행(`start:dev`)과 요청→응답 흐름 관찰
   - 라우팅: `@Get`/`@Post`, 경로 파라미터 `@Param(':id')`, 요청 바디 `@Body`
   - 컨트롤러/서비스 역할 분리, `this`·DI 개념, 메모리 배열을 서비스 필드로 상태 유지
-  - 게시판 CRUD 일부: `GET /posts`(목록), `GET /posts/:id`(단건), `POST /posts`(생성)
-  - 타입: `Omit<Post,'id'>`로 생성 입력 타입 분리, `Number(id)` 문자열→숫자 변환
-  - HTTP 상태코드 감(200/201), `curl`로 응답(상태코드·헤더·바디) 확인하는 습관
+  - **게시판 CRUD 한 바퀴 완성**: `GET /posts`(목록)·`GET /posts/:id`(단건)·`POST /posts`(생성)·`PATCH /posts/:id`(수정)·`DELETE /posts/:id`(삭제)
+  - 타입: `Omit<Post,'id'>`(생성 입력), `Partial<Omit<Post,'id'>>`(부분 수정 입력), `Number(id)` 변환
+  - 예외 처리: 없는 글에 `throw new NotFoundException` → 404 자동 응답. "던지면 프레임워크가 잡아 응답으로 변환"(기본 Exception Filter) 감각. `getPost(id)`를 update/delete가 재사용해 "찾기+404"를 한 곳에 모음
+  - PATCH=부분수정(보낸 필드만 `Object.assign`으로 덮어씀, content 유지) vs PUT=통째교체 차이 이해
+  - DELETE는 `filter`로 새 배열 재할당(React setState식). 반환은 `{deleted:true}`(204는 `@HttpCode`가 필요해 나중에)
+  - TS 에러 4053 경험: 서비스 내부 `interface Post`가 컨트롤러 반환 타입으로 새어나가자 `export interface Post`로 공개 필요 → "타입이 파일 밖으로 나가면 export"
+  - HTTP 상태코드 감(200/201/404), `curl`로 응답(상태코드·헤더·바디) 확인하는 습관
   - 학습 노트: `study-blog/2026-07-03-nestjs-posts-crud.md`
-- **다음 할 일**: 없는 글 조회 시 `NotFoundException`으로 404 응답 만들기 → 이어서 Exception Filter, DTO 검증(class-validator), 나머지 CRUD(수정 PATCH·삭제 DELETE)
-- **막힌 것 / 메모**: 현재 `GET /posts/:id`가 없는 id에도 200+빈응답을 반환함(다음 세션 시작점). 데이터는 메모리라 서버 재시작 시 초기화됨(정상, 2단계 DB에서 해결 예정).
+- **다음 할 일**: DTO 검증(class-validator + ValidationPipe, `@Body() body: any` 걷어내기) → 전역 Exception Filter 커스터마이징 → 이후 단계 2(DB & Knex)
+- **막힌 것 / 메모**: 데이터는 메모리라 서버 재시작 시 초기화됨(정상, 2단계 DB에서 해결 예정). `createPost`의 id 발급이 `posts.length+1`이라 삭제 후 생성 시 id 충돌 가능(2단계 DB auto-increment로 자연 해결 예정).
