@@ -18,6 +18,9 @@ yarn-error.log*
 /coverage
 /.nyc_output
 
+# Claude Code (local config/skills)
+.claude/
+
 # IDEs and editors
 /.idea
 .project
