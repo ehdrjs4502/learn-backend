@@ -8,6 +8,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { AppService } from './app.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller()
 export class AppController {
@@ -34,13 +36,13 @@ export class AppController {
   }
 
   @Post('posts')
-  createPost(@Body() body: any) {
-    return this.appService.createPost(body);
+  createPost(@Body() dto: CreatePostDto) {
+    return this.appService.createPost(dto);
   }
 
   @Patch('posts/:id')
-  updatePost(@Param('id') id: string, @Body() body: any) {
-    return this.appService.updatePost(Number(id), body);
+  updatePost(@Param('id') id: string, @Body() dto: UpdatePostDto) {
+    return this.appService.updatePost(Number(id), dto);
   }
 
   @Delete('posts/:id')

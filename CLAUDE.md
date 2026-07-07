@@ -78,6 +78,10 @@
   - DELETE는 `filter`로 새 배열 재할당(React setState식). 반환은 `{deleted:true}`(204는 `@HttpCode`가 필요해 나중에)
   - TS 에러 4053 경험: 서비스 내부 `interface Post`가 컨트롤러 반환 타입으로 새어나가자 `export interface Post`로 공개 필요 → "타입이 파일 밖으로 나가면 export"
   - HTTP 상태코드 감(200/201/404), `curl`로 응답(상태코드·헤더·바디) 확인하는 습관
-  - 학습 노트: `study-blog/2026-07-03-nestjs-posts-crud.md`
-- **다음 할 일**: DTO 검증(class-validator + ValidationPipe, `@Body() body: any` 걷어내기) → 전역 Exception Filter 커스터마이징 → 이후 단계 2(DB & Knex)
-- **막힌 것 / 메모**: 데이터는 메모리라 서버 재시작 시 초기화됨(정상, 2단계 DB에서 해결 예정). `createPost`의 id 발급이 `posts.length+1`이라 삭제 후 생성 시 id 충돌 가능(2단계 DB auto-increment로 자연 해결 예정).
+  - **DTO 검증(요청 파이프라인의 Pipe)**: `ValidationPipe` 전역 등록(`whitelist:true`로 미선언 필드 제거), `CreatePostDto`/`UpdatePostDto`를 class-validator 데코레이터(`@IsString`/`@IsNotEmpty`/`@IsOptional`)로 작성. `@Body() body:any` → DTO로 교체하니 타입이 곧 검증 대상 지정이 됨. 위반 시 400 자동 응답(메시지 배열)
+  - DTO는 왜 `interface`가 아니라 `class`인가: 검증은 런타임에 일어나야 하는데 interface는 컴파일 후 사라짐. class+데코레이터라야 규칙 메타데이터가 런타임까지 살아남음
+  - TS ts2564(`has no initializer`) 경험: strict 모드에서 DTO 필드는 `title!:string`(definite assignment `!`, 필수지만 런타임에 채워짐) vs 선택 필드는 `content?:string`(`?`)
+  - **PATCH undefined 버그 사냥**: `target:es2023`+`useDefineForClassFields:true`라 DTO의 `content?` 필드가 인스턴스에 `undefined`로 박힘 → class-transformer 변환 후 `Object.assign`이 기존 값을 `undefined`로 덮어 content가 사라짐. 해결: 서비스에서 `if (data.title !== undefined) post.title = data.title`처럼 온 필드만 반영(인덱스 접근 `data[key]`는 typescript-eslint `no-unsafe` 걸려서 필드 명시가 더 안전). 진단 습관: "멀쩡하던 필드가 사라지면 누가 undefined로 덮었나 의심 → data를 로그로"
+  - 학습 노트: `study-blog/2026-07-03-nestjs-posts-crud.md`, `study-blog/2026-07-06-nestjs-exception-crud-complete.md`
+- **다음 할 일**: (선택) `UpdatePostDto = PartialType(CreatePostDto)`로 DTO 중복 제거(`@nestjs/mapped-types` 설치 필요) → 전역 Exception Filter 커스터마이징 → 이후 단계 2(DB & Knex)
+- **막힌 것 / 메모**: 데이터는 메모리라 서버 재시작 시 초기화됨(정상, 2단계 DB에서 해결 예정). `createPost`의 id 발급이 `posts.length+1`이라 삭제 후 생성 시 id 충돌 가능(2단계 DB auto-increment로 자연 해결 예정). `class-validator`/`class-transformer` 설치됨.

@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 export interface Post {
   id: number;
@@ -31,15 +33,19 @@ export class AppService {
     return post;
   }
 
-  createPost(post: Omit<Post, 'id'>) {
+  createPost(post: CreatePostDto) {
     const newPost = { id: this.posts.length + 1, ...post };
     this.posts.push(newPost);
     return newPost;
   }
 
-  updatePost(id: number, data: Partial<Omit<Post, 'id'>>) {
-    const post = this.getPost(id); // ← 찾기+404를 재사용
-    return Object.assign(post, data);
+  updatePost(id: number, data: UpdatePostDto) {
+    const post = this.getPost(id);
+
+    if (data.title !== undefined) post.title = data.title;
+    if (data.content !== undefined) post.content = data.content;
+
+    return post;
   }
 
   deletePost(id: number) {
