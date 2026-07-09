@@ -66,7 +66,7 @@
 
 > Claude는 세션을 시작할 때 이 섹션을 읽고 "지난번 여기까지 했으니 이어서 하자"라고 확인한다. 진도가 나가면 이 섹션을 업데이트한다.
 
-- **현재 단계**: 1 (표준 NestJS, 진행 중)
+- **현재 단계**: 2 (DB & Knex, 진행 중 — CRUD 교체까지 완료, 트랜잭션 남음)
 - **완료한 것**:
   - 프로젝트 세팅(`nest new` 뼈대 확인), 서버 실행(`start:dev`)과 요청→응답 흐름 관찰
   - 라우팅: `@Get`/`@Post`, 경로 파라미터 `@Param(':id')`, 요청 바디 `@Body`
@@ -85,5 +85,13 @@
   - **DTO 중복 제거(PartialType)**: `@nestjs/mapped-types` 설치 후 `UpdatePostDto extends PartialType(CreatePostDto)` 한 줄로 대체. 손으로 베낀 `@IsString`/`@IsNotEmpty`가 전부 상속되되 모든 필드가 optional로 바뀜. TS `Partial<T>`(타입만 optional)와 달리 PartialType은 **런타임 검증 데코레이터까지 복사**. curl 4종(부분수정 200 / 빈content 400 / 숫자title 400 / 빈바디{} 200)으로 검증 규칙 상속 확인. 이제 CreatePostDto에 필드 추가하면 UpdatePostDto가 자동 추종
   - **전역 Exception Filter(파이프라인 4형제 마지막)**: `HttpExceptionFilter implements ExceptionFilter` + `@Catch(HttpException)`로 NotFound/BadRequest 등 HttpException 계열을 다 잡아 에러 응답을 `{success:false, statusCode, message, path, timestamp}`로 통일. `host.switchToHttp()`로 res/req 꺼내고 `exception.getStatus()`/`getResponse()`로 값 추출. main.ts에 `app.useGlobalFilters(new HttpExceptionFilter())` 등록(ValidationPipe 등록과 쌍둥이 패턴). 비유: React Error Boundary(throw→필터가 잡아 fallback). message가 404=문자열/400=배열 둘 다 오므로 `typeof res==='string' ? res : (res as {message:string|string[]}).message`로 흡수. 타입 교훈 재확인: `as any`(검사 끔) 대신 `as {message:...}`로 좁혀 typescript-eslint no-unsafe 회피. curl 검증(404·400 새 형식 / 정상 200은 필터 안 탐)
   - 학습 노트: `study-blog/2026-07-03-nestjs-posts-crud.md`, `study-blog/2026-07-06-nestjs-exception-crud-complete.md`
-- **다음 할 일**: 단계 1 마무리 정리(원하면 study-blog 노트) → 단계 2(DB & Knex): SQL 기본 + Knex 쿼리빌더 + 마이그레이션, 메모리 배열을 MySQL로 교체
+- **[단계 2] 완료한 것**:
+  - MySQL 환경: root 비번 분실 → `--init-file`로 재설정(관리자 PowerShell). 전용 DB `learn_backend`(utf8mb4) + 전용 계정 `learn`@localhost(비번 `Board!234`, 권한 최소화) 생성. root 비번은 `Learn!234`
+  - Knex + mysql2 설치. 접속정보는 `.env`(gitignore됨, dotenv로 로드) — DB_HOST/PORT/USER/PASSWORD/NAME. `knexfile.js`(CLI가 Node로 직접 실행 → nodenext 마찰 피하려 .js). `.env.example`은 견본으로 커밋
+  - `DatabaseModule`(`src/database/database.module.ts`): `@Global` + useFactory로 knex 인스턴스를 `KNEX` 문자열 토큰으로 provide. 서비스는 `@Inject(KNEX) private knex: Knex`로 주입(Knex는 class가 아니라 타입 주입 불가→토큰 필요). 비유: React QueryClientProvider
+  - 마이그레이션: `npx knex migrate:make`→`up`에서 `knex.schema.createTable`(increments/string/text/integer.defaultTo(0)/timestamps), `down`에서 dropTable. 반드시 `return`(비동기). `migrate:latest`로 실행. knex_migrations 장부 테이블 자동 생성
+  - CRUD를 메모리 배열→Knex로 교체: `knex('posts').select('*')`, `.where({id}).first()`, `.insert(dto)`→`[insertId]`, `.where({id}).update(dto)`, `.where({id}).del()`. 전부 async. 컨트롤러는 무변경(Nest가 Promise 자동 await)
+  - **중요 교훈**: UPDATE/DELETE에 `.where()` 빼먹으면 전테이블 적용(대참사). `.del(arg)`의 인자는 WHERE가 아니라 returning(MySQL 미지원→무시). update() 반환값은 "바뀐 행 개수"라 재조회는 `getPost(id)`로. 재시작 후에도 데이터 생존 확인(영속성 증명)
+  - 학습자 배경 보정: 컴공 전공+DB 이론 아는 편(정처기 수준) → DB 개념 설명 최소화, Knex/NestJS 특이점에 집중(메모리 저장)
+- **다음 할 일**: 트랜잭션(`knex.transaction`) — "조회 시 조회수 +1" 또는 "글쓰기+카운트 증가"를 원자적으로 → 단계 2 마무리 study-blog → 단계 3(인증)
 - **막힌 것 / 메모**: 데이터는 메모리라 서버 재시작 시 초기화됨(정상, 2단계 DB에서 해결 예정). `createPost`의 id 발급이 `posts.length+1`이라 삭제 후 생성 시 id 충돌 가능(2단계 DB auto-increment로 자연 해결 예정). `class-validator`/`class-transformer`/`@nestjs/mapped-types` 설치됨.

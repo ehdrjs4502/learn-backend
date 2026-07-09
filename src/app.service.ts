@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Knex } from 'knex';
+import { KNEX } from './database/database.module';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
@@ -6,51 +8,60 @@ export interface Post {
   id: number;
   title: string;
   content: string;
+  views: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 @Injectable()
 export class AppService {
-  private posts = [
-    { id: 1, title: '첫 글', content: '안녕' },
-    { id: 2, title: '둘째 글', content: '반가워' },
-  ];
+  constructor(@Inject(KNEX) private readonly knex: Knex) {}
 
   getHello(): string {
     return 'Hello World!';
   }
 
-  getPosts(): Post[] {
-    return this.posts;
+  // 전체 조회 — Promise<Post[]>
+  async getPosts(): Promise<Post[]> {
+    return this.knex<Post>('posts').select('*');
   }
 
-  getPost(id: number) {
-    const post = this.posts.find((post) => post.id === id);
-
+  // 단건 조회 + 없으면 404
+  async getPost(id: number): Promise<Post> {
+    const post = await this.knex<Post>('posts').where({ id }).first();
     if (!post) {
       throw new NotFoundException('글을 찾을 수 없습니다.');
     }
-
     return post;
   }
 
-  createPost(post: CreatePostDto) {
-    const newPost = { id: this.posts.length + 1, ...post };
-    this.posts.push(newPost);
-    return newPost;
+  async createPost(dto: CreatePostDto): Promise<Post> {
+    // TODO: insert하면 [삽입된id]가 배열로 옴 → 구조분해로 꺼내고,
+    //       getPost(id)로 방금 만든 글을 다시 조회해 반환 (DB가 채운 id·views·시각까지 담겨 옴)
+
+    const newPost = await this.knex<Post>('posts').insert(dto);
+
+    return this.getPost(newPost[0]);
   }
 
-  updatePost(id: number, data: UpdatePostDto) {
-    const post = this.getPost(id);
+  async updatePost(id: number, dto: UpdatePostDto): Promise<Post> {
+    // TODO: 먼저 getPost(id)로 존재 확인(없으면 여기서 404),
+    //       update 실행 후, 갱신된 글을 getPost(id)로 다시 조회해 반환
 
-    if (data.title !== undefined) post.title = data.title;
-    if (data.content !== undefined) post.content = data.content;
+    await this.getPost(id);
 
-    return post;
+    await this.knex<Post>('posts').where({ id }).update(dto);
+
+    return this.getPost(id);
   }
 
-  deletePost(id: number) {
-    this.getPost(id);
-    this.posts = this.posts.filter((post) => post.id !== id);
+  async deletePost(id: number): Promise<{ deleted: boolean }> {
+    // TODO: 존재 확인 후 del(), { deleted: true } 반환
+
+    await this.getPost(id);
+
+    await this.knex<Post>('posts').where({ id }).del();
+
     return { deleted: true };
   }
 }
